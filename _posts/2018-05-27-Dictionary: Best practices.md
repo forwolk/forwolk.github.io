@@ -21,8 +21,9 @@ Now that we are through with internal workings of the Dictionary let’s move on
 <h1>Common mistakes</h1>
 <b>1. Forgetting to supply custom IEqualityComparer when using Value type as a key in Dictionary.</b>
 
-This leads to boxing of the keys every time we perform any operation on the collection. Even lookups will be hurt by it. If you do not supply your implementation of IEqualityComparer<T>, C# dictionary will use the default one.
+This leads to boxing of the keys every time we perform any operation on the collection. Even lookups will be hurt by it. If you do not supply your implementation of IEqualityComparer<T>, C# dictionary will use the <a href="https://referencesource.microsoft.com/#mscorlib/system/collections/generic/dictionary.cs,94">default</a> one.
 
+<img class="alignnone size-medium wp-image-60" src="https://forwolk.github.io/docs/assets/images/DictionaryComparers2.png" alt="" width="569" height="353" sizes="(max-width: 569px) 100vw, 569px"/>
 
 As you can see, the difference is obvious. Though it seems that .net core compiler or JIT are doing something magical with default integer comparators as they actually perform better than the overridden once. Still, the statement holds for IL2CPP output, and I suspect for older versions of .net.
 
@@ -30,6 +31,7 @@ As you can see, the difference is obvious. Though it seems that .net core compil
 
 Omitting capacity will make Dictionary rehash and reposition items in their respective buckets every time it’s underlying bucket array needs to grow.
 
+<img class="alignnone size-medium wp-image-62" src="https://forwolk.github.io/docs/assets/images/DictionaryCapacity2.png" alt="" width="569" height="353" sizes="(max-width: 569px) 100vw, 569px"/>
 
 <b>3. The final but not obvious case when Dictionary behaves far from optimal is when you supply it with a pathological data set.</b>
 
@@ -38,6 +40,8 @@ Pathological data set means that a lot of the items resolve to the same bucket, 
 We already mentioned that collisions are the result of the compression function which is <b>hashcode % bucketArray.length</b>. As you can see elements, for whose hashcode, bucketArray.length is a factor, will all map to 0 index bucket. To reduce the probability of that happening, Dictionary grows its underlying array in a different manner than List<T>. Instead of just doubling the array, it doubles the current capacity and searches for a prime number closest to that value – this will be new array size.
 
 Prime numbers are rare, so the probability of them being a factor of your keys hashcode is relatively low. Still, under certain “size” of underlying bucketArray and a certain set of data, there is a possibility for this case manifesting. Here is an example.
+
+<img class="alignnone size-medium wp-image-46" src="https://forwolk.github.io/docs/assets/images/DictionaryDataset.png" alt="" width="569" height="353" sizes="(max-width: 569px) 100vw, 569px"/>
 
 The trick here is that all elements have hashcode equal to 36353 * n. So in case of Dictionary capacity being equal to 36353, they all map to the same bucket.
 
@@ -49,4 +53,4 @@ So, the important takeaways should be:
 Here is the <a href="https://bitbucket.org/dev_blog/dictionarybenchmark/src/master/">link</a> to a benchmarks code.
 
 P.S.
-I would like to thank my good friends Maxim Agapov and Pavel Naidenov for reviewing this post.
+I would like to thank my good friends <a href="https://www.linkedin.com/in/proffesso/">Maxim Agapov</a> and <a href="https://www.linkedin.com/in/somewater/">Pavel Naidenov</a> for reviewing this post.
